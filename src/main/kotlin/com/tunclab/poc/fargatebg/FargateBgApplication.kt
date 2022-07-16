@@ -9,3 +9,4 @@ class FargateBgApplication
 fun main(args: Array<String>) {
     runApplication<FargateBgApplication>(*args)
 }
+

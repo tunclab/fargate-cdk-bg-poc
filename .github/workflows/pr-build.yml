@@ -1,0 +1,46 @@
+name: PR Workflow
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on pull request events but only for the main branch
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains jobs called "build", "dockerise"
+  ci:
+    # The type of runner that the job will run on
+    name: Build & Publish
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.SIMBO_PIPELINE_ROLE }}
+          role-session-name: workflow-session
+          aws-region: us-east-1
+
+      - name: Unit Test
+        run: |
+          chmod +x ./gradlew
+          ./gradlew test
+
+      - name: Build Binary
+        run: |
+          chmod +x ./gradlew
+          ./gradlew bootJar
