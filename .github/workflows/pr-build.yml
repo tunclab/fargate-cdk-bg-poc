@@ -31,9 +31,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.SIMBO_PIPELINE_ROLE }}
+          role-to-assume: ${{ secrets.SIMBO_GH_WORKFLOW_ROLE }}
           role-session-name: workflow-session
-          aws-region: us-east-1
+          aws-region: ap-southeast-2
 
       - name: Unit Test
         run: |
