@@ -3,18 +3,12 @@ import {Construct} from "constructs";
 import * as r53 from "aws-cdk-lib/aws-route53";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
-import * as alb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 
 export interface SharedResourcesStackProps extends core.StackProps {
     hostedZoneId: string;
     hostedZoneName: string;
     containerPort: number;
-}
-
-export interface TargetGroupMapping {
-    name: string;
-    targetGroup: alb.ApplicationTargetGroup
 }
 
 export class SharedResourcesStack extends core.Stack {
@@ -55,6 +49,15 @@ export class SharedResourcesStack extends core.Stack {
         });
         this.vpc.addInterfaceEndpoint('s3', {
             service: ec2.InterfaceVpcEndpointAwsService.STORAGE_GATEWAY,
+        });
+        this.vpc.addInterfaceEndpoint('logs', {
+            service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
+        });
+        this.vpc.addGatewayEndpoint('s3-gw', {
+            service: ec2.GatewayVpcEndpointAwsService.S3,
+            subnets: [
+                { subnetType: ec2.SubnetType.PRIVATE_ISOLATED }
+            ]
         });
 
         this.cluster = new ecs.Cluster(this, 'poc-cluster', {

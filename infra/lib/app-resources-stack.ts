@@ -21,18 +21,27 @@ export class ApplicationResourceStack extends core.Stack {
 
     constructor(scope: Construct, id: string, props: ApplicationStackProps) {
         super(scope, id, props);
-        const {vpc, cluster, sslCertificate, hostedZone} = props;
+        const {cluster, sslCertificate, hostedZone} = props;
 
         // Task Definition
 
         const apiTaskDefName = `fargate-bg-task`;
+        const executionRole = new iam.Role(this, `fargate-bg-task-execution-role`, {
+            roleName: 'fargate-bg-task-execution-role',
+            assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+            managedPolicies: [
+                iam.ManagedPolicy.fromManagedPolicyArn(this, 'ex-role','arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'),
+                iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2ContainerRegistryReadOnly')
+            ]
+        });
         const taskDefinition = new ecs.FargateTaskDefinition(this, apiTaskDefName, {
             family: apiTaskDefName,
             cpu: 256,
             memoryLimitMiB: 512,
+            executionRole
         });
 
-        const logGroup = new logs.LogGroup(this, `fargate-bg--logs`, {
+        const logGroup = new logs.LogGroup(this, `fargate-bg-logs`, {
             logGroupName: `fargate-bg-logs`,
             removalPolicy: core.RemovalPolicy.DESTROY,
             retention: logs.RetentionDays.ONE_MONTH
@@ -42,7 +51,7 @@ export class ApplicationResourceStack extends core.Stack {
 
         taskDefinition.addContainer(`fargate-bg-container`, {
             containerName: `fargate-bg-container`,
-            image: ecs.ContainerImage.fromEcrRepository(ecrRepo, 'latest'),
+            image: ecs.ContainerImage.fromEcrRepository(ecrRepo, 'v0.0.1-beta.3'),
             portMappings: [{containerPort: 8080}],
             logging: ecs.LogDriver.awsLogs({
                 logGroup,
@@ -50,16 +59,8 @@ export class ApplicationResourceStack extends core.Stack {
             })
         });
 
-        const taskExecutionPolicy = iam.ManagedPolicy.fromManagedPolicyArn(this, 'task-execution-policy', 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy')
-        taskDefinition.executionRole?.addManagedPolicy(taskExecutionPolicy);
-
         // Service
         const serviceName = `fargate-bg-service`;
-        const serviceSecurityGroup = new ec2.SecurityGroup(this, `${serviceName}-sg`, {
-            vpc,
-            securityGroupName: `${serviceName}-sg`,
-        });
-        serviceSecurityGroup.addIngressRule(ec2.Peer.ipv4(vpc.vpcCidrBlock), ec2.Port.tcp(8080));
 
         const service = new ecp.ApplicationMultipleTargetGroupsFargateService(this, 'fg-service', {
             cluster,
