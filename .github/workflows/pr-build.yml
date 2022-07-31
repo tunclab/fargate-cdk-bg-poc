@@ -86,5 +86,5 @@ jobs:
 
       - name: Get Task Definition
         run: |
-          aws ecs describe-task-definition --task-definition service --query taskDefinition > task-definition.json
+          aws ecs describe-task-definition --task-definition fargate-bg-task --query taskDefinition > task-definition.json
           cat task-definition.json
