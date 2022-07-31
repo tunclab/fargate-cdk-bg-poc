@@ -19,6 +19,9 @@ jobs:
       id-token: write
       contents: write
 
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
 
@@ -68,9 +71,6 @@ jobs:
           docker push -a $ECR_REGISTRY/$ECR_REPOSITORY
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-    outputs:
-      image: ${{ steps.build-image.outputs.image }}
-
   cd:
     name: Deploy
     needs:
@@ -81,6 +81,10 @@ jobs:
       contents: write
 
     steps:
+      - name: Outputs from CI
+        run: |
+          echo ${{ needs.ci.outputs.image }}
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
