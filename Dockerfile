@@ -1,4 +1,4 @@
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:18-al2-jdk
+FROM public.ecr.aws/u3q7a2g1/openjdk:11.0.15-jre-slim
 
 WORKDIR /app
 
