@@ -10,7 +10,6 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains jobs called "build", "dockerise"
   ci:
     # The type of runner that the job will run on
     name: Build & Publish
@@ -66,7 +65,7 @@ jobs:
           ECR_REPOSITORY: fargate-bg
           IMAGE_TAG: ${{ steps.semver.outputs.new_tag }}
         run: |
-          docker build --platform=linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push -a $ECR_REGISTRY/$ECR_REPOSITORY
           echo "::set-output name=tag::$IMAGE_TAG"
 
