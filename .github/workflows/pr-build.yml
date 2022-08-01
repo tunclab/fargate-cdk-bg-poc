@@ -20,7 +20,9 @@ jobs:
       contents: write
 
     outputs:
-      image: ${{ steps.build-image.outputs.image }}
+      registry: ${{ steps.build-image.outputs.registry }}
+      repo: ${{ steps.build-image.outputs.repo }}
+      tag: ${{ steps.build-image.outputs.tag }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -68,12 +70,13 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push -a $ECR_REGISTRY/$ECR_REPOSITORY
-          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "::set-output name=registry::$ECR_REGISTRY"
+          echo "::set-output name=repo::$ECR_REPOSITORY"
+          echo "::set-output name=tag::$IMAGE_TAG"
 
   cd:
     name: Deploy
-    needs:
-      - ci
+    needs: ci
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -82,7 +85,7 @@ jobs:
     steps:
       - name: Outputs from CI
         run: |
-          echo ${{ needs.ci.outputs.image }}
+          echo ${{ needs.ci.outputs.registry }}/${{ needs.ci.outputs.repo }}:${{ needs.ci.outputs.tag }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -102,7 +105,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: fargate-bg-container
-          image: ${{ needs.ci.outputs.image }}
+          image: ${{ needs.ci.outputs.registry }}/${{ needs.ci.outputs.repo }}:${{ needs.ci.outputs.tag }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
