@@ -40,14 +40,14 @@ jobs:
           role-session-name: workflow-session
           aws-region: ap-southeast-2
 
-      - name: Unit Test
-        run: |
-          echo "Unit Tests"
-
-      - name: Build Binary
-        run: |
-          chmod +x ./gradlew
-          ./gradlew bootJar
+#      - name: Unit Test
+#        run: |
+#          echo "Unit Tests"
+#
+#      - name: Build Binary
+#        run: |
+#          chmod +x ./gradlew
+#          ./gradlew bootJar
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -68,9 +68,9 @@ jobs:
           ECR_REPOSITORY: fargate-bg
           IMAGE_TAG: ${{ steps.semver.outputs.new_tag }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push -a $ECR_REGISTRY/$ECR_REPOSITORY
-          echo "::set-output name=registry::$ECR_REGISTRY"
+          echo "Registry(E) $ECR_REGISTRY"
+          echo "Registry(O) ${{ steps.login-ecr.outputs.registry }}"
+          echo "::set-output name=registry::$ECR_REPOSITORY"
           echo "::set-output name=repo::$ECR_REPOSITORY"
           echo "::set-output name=tag::$IMAGE_TAG"
 
@@ -86,8 +86,7 @@ jobs:
       - name: Outputs from CI
         run: |
           echo ${{ needs.ci.outputs.registry }}
-          echo ${{ needs.ci.outputs.registry }}/${{ needs.ci.outputs.repo }}:${{ needs.ci.outputs.tag }}
-          echo "${{ needs.ci.outputs.registry }}/${{ needs.ci.outputs.repo }}:${{ needs.ci.outputs.tag }}"
+          echo ${{ needs.ci.outputs.registry }}/fargate-bg:${{ needs.ci.outputs.tag }}
 
 #      - name: Configure AWS credentials
 #        uses: aws-actions/configure-aws-credentials@v1
@@ -107,7 +106,7 @@ jobs:
 #        with:
 #          task-definition: task-definition.json
 #          container-name: fargate-bg-container
-#          image: ${{ needs.ci.outputs.registry }}/${{ needs.ci.outputs.repo }}:${{ needs.ci.outputs.tag }}
+#          image: ${{ needs.ci.outputs.registry }}/fargate-bg:${{ needs.ci.outputs.tag }}
 #
 #      - name: Deploy Amazon ECS task definition
 #        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
