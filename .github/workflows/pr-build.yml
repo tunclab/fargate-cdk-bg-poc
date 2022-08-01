@@ -66,7 +66,7 @@ jobs:
           ECR_REPOSITORY: fargate-bg
           IMAGE_TAG: ${{ steps.semver.outputs.new_tag }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build --platform=linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push -a $ECR_REGISTRY/$ECR_REPOSITORY
           echo "::set-output name=tag::$IMAGE_TAG"
 
